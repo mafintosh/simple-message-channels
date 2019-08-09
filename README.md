@@ -6,6 +6,8 @@ Simple streamable state machine that implements a useful channel, message-type, 
 npm install simple-message-channels
 ```
 
+[![Build Status](https://travis-ci.org/mafintosh/simple-message-channels.svg?branch=master)](https://travis-ci.org/mafintosh/simple-message-channels)
+
 ## Usage
 
 ``` js
