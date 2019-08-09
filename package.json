@@ -1,6 +1,6 @@
 {
   "name": "simple-message-channels",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Simple streamable state machine that implements a useful channel, message-type, message pattern",
   "main": "index.js",
   "dependencies": {
