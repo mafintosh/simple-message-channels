@@ -10,6 +10,9 @@
     "standard": "^13.1.0",
     "tape": "^4.11.0"
   },
+  "scripts": {
+    "test": "standard && tape test.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mafintosh/simple-message-channels.git"
