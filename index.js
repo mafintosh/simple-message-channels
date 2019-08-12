@@ -41,7 +41,7 @@ module.exports = class SimpleMessageChannels {
       } else {
         this._message = data.slice(offset, offset + this._length)
       }
-      return this._nextState() ? offset + this._length : data.length
+      return this._nextState(data, offset += this._length) ? offset : data.length
     }
 
     if (!this._message) this._message = Buffer.allocUnsafe(this._length)
@@ -55,14 +55,14 @@ module.exports = class SimpleMessageChannels {
     for (; offset < data.length; offset++) {
       this._varint += (data[offset] & 127) * this._factor
       this._consumed++
-      if (data[offset] < 128) return this._nextState() ? offset + 1 : data.length
+      if (data[offset] < 128) return this._nextState(data, ++offset) ? offset : data.length
       this._factor *= 128
     }
     if (this._consumed >= 8) this.destroy(new Error('Incoming varint is invalid')) // 8 * 7bits is 56 ie max for js
     return data.length
   }
 
-  _nextState () {
+  _nextState (data, offset) {
     switch (this._state) {
       case 0:
         this._state = 1
@@ -85,7 +85,7 @@ module.exports = class SimpleMessageChannels {
 
       case 2:
         this._state = 0
-        this._onmessage(this._header >> 4, this._header & 0b1111, this._message)
+        this._onmessage(this._header >> 4, this._header & 0b1111, this._message, data, offset)
         this._message = null
         return !this.destroyed
 
@@ -94,10 +94,10 @@ module.exports = class SimpleMessageChannels {
     }
   }
 
-  _onmessage (channel, type, message) {
+  _onmessage (channel, type, message, data, offset) {
     if (type >= this._types.length) {
       if (this.onmessage === null) return
-      return this.onmessage(channel, type, message, this.context)
+      return this.onmessage(channel, type, message, this.context, data, offset)
     }
 
     let m = null
@@ -110,7 +110,7 @@ module.exports = class SimpleMessageChannels {
       return
     }
 
-    onmessage(channel, m, context)
+    onmessage(channel, m, context, data, offset)
   }
 
   send (channel, type, message) {
