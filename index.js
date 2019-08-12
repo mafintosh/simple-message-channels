@@ -1,7 +1,7 @@
 const varint = require('varint')
 
 module.exports = class SimpleMessageChannels {
-  constructor ({ maxSize = 8 * 1024 * 1024, context = null, onmessage = null } = {}) {
+  constructor ({ maxSize = 8 * 1024 * 1024, context = null, onmessage = null, types = null } = {}) {
     this._message = null
     this._ptr = 0
     this._varint = 0
@@ -11,6 +11,7 @@ module.exports = class SimpleMessageChannels {
     this._state = 0
     this._consumed = 0
     this._maxSize = maxSize
+    this._types = types || []
 
     this.destroyed = false
     this.error = null
@@ -84,7 +85,7 @@ module.exports = class SimpleMessageChannels {
 
       case 2:
         this._state = 0
-        if (this.onmessage !== null) this.onmessage(this._header >> 4, this._header & 0b1111, this._message, this.context)
+        this._onmessage(this._header >> 4, this._header & 0b1111, this._message)
         this._message = null
         return !this.destroyed
 
@@ -93,15 +94,34 @@ module.exports = class SimpleMessageChannels {
     }
   }
 
+  _onmessage (channel, type, message) {
+    if (type >= this._types.length) {
+      if (this.onmessage === null) return
+      return this.onmessage(channel, type, message, this.context)
+    }
+
+    let m = null
+    const { onmessage, encoding, context } = this._types[type]
+
+    try {
+      m = encoding.decode(message)
+    } catch (err) {
+      this.destroy(err)
+      return
+    }
+
+    onmessage(channel, m, context)
+  }
+
   send (channel, type, message) {
     const header = channel << 4 | type
-    const length = message.length + varint.encodingLength(header)
+    const length = this._encodingLength(type, message) + varint.encodingLength(header)
     const payload = Buffer.allocUnsafe(varint.encodingLength(length) + length)
 
     varint.encode(length, payload, 0)
     const offset = varint.encode.bytes
     varint.encode(header, payload, offset)
-    message.copy(payload, offset + varint.encode.bytes)
+    this._encode(type, message, payload, offset + varint.encode.bytes)
 
     return payload
   }
@@ -110,24 +130,39 @@ module.exports = class SimpleMessageChannels {
     let length = 0
     let offset = 0
 
-    for (const m of messages) {
+    for (const { type, message } of messages) {
       // 16 is >= the max size of the varints
-      length += 16 + m.message.length
+      length += 16 + this._encodingLength(type, message)
     }
 
     const payload = Buffer.allocUnsafe(length)
 
     for (const { channel, type, message } of messages) {
       const header = channel << 4 | type
-      const length = message.length + varint.encodingLength(header)
+      const length = this._encodingLength(type, message) + varint.encodingLength(header)
       varint.encode(length, payload, offset)
       offset += varint.encode.bytes
       varint.encode(header, payload, offset)
       offset += varint.encode.bytes
-      message.copy(payload, offset)
-      offset += message.length
+      offset += this._encode(type, message, payload, offset)
     }
 
     return payload.slice(0, offset)
+  }
+
+  _encodingLength (type, message) {
+    if (type >= this._types.length) return message.length
+    return this._types[type].encoding.encodingLength(message)
+  }
+
+  _encode (type, message, buf, offset) {
+    if (type >= this._types.length) {
+      message.copy(buf, offset)
+      return message.length
+    }
+
+    const enc = this._types[type].encoding
+    enc.encode(message, buf, offset)
+    return enc.encode.bytes
   }
 }

@@ -31,7 +31,7 @@ tape('basic chunked', function (t) {
   }
 })
 
-tape.only('two messages chunked', function (t) {
+tape('two messages chunked', function (t) {
   t.plan(6)
 
   const expected = [
