@@ -7,11 +7,10 @@
     "varint": "^5.0.0"
   },
   "devDependencies": {
-    "standard": "^13.1.0",
     "tape": "^4.11.0"
   },
   "scripts": {
-    "test": "standard && tape test.js"
+    "test": "tape test.js"
   },
   "repository": {
     "type": "git",
