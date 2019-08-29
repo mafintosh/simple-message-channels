@@ -69,6 +69,7 @@ module.exports = class SimpleMessageChannels {
         this._factor = 1
         this._length = this._varint
         this._consumed = this._varint = 0
+        if (this._length === 0) this._state = 0
         return true
 
       case 1:
