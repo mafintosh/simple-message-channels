@@ -13,6 +13,7 @@ module.exports = class SimpleMessageChannels {
     this._maxSize = maxSize
     this._types = types || []
 
+    this.receiving = false
     this.destroyed = false
     this.error = null
     this.context = context
@@ -25,11 +26,19 @@ module.exports = class SimpleMessageChannels {
   }
 
   recv (data) {
+    if (this.receiving === true) throw new Error('Cannot recursively receive data')
+    this.receiving = true
+
     let offset = 0
     while (offset < data.length) {
       if (this._state === 2) offset = this._readMessage(data, offset)
       else offset = this._readVarint(data, offset)
     }
+    if (this._state === 2 && this._length === 0) {
+      this._readMessage(data, offset)
+    }
+
+    this.receiving = false
     return !this.destroyed
   }
 

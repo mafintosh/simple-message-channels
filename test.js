@@ -60,3 +60,16 @@ tape('two messages chunked', function (t) {
     a.recv(payload2.slice(i, i + 1))
   }
 })
+
+tape('empty message', function (t) {
+  const a = new SMC({
+    onmessage (channel, type, message) {
+      t.same(channel, 0)
+      t.same(type, 0)
+      t.same(message, Buffer.alloc(0))
+      t.end()
+    }
+  })
+
+  a.recv(a.send(0, 0, Buffer.alloc(0)))
+})
