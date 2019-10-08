@@ -46,7 +46,7 @@ module.exports = class SimpleMessageChannels {
     const free = data.length - offset
     if (free >= this._length) {
       if (this._message) {
-        data.copy(this._message, this._message.length - this._length)
+        data.copy(this._message, this._message.length - this._length, offset)
       } else {
         this._message = data.slice(offset, offset + this._length)
       }
@@ -54,7 +54,7 @@ module.exports = class SimpleMessageChannels {
     }
 
     if (!this._message) this._message = Buffer.allocUnsafe(this._length)
-    data.copy(this._message, this._message.length - this._length)
+    data.copy(this._message, this._message.length - this._length, offset)
     this._length -= data.length
 
     return data.length
