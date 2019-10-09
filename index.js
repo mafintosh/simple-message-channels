@@ -94,7 +94,7 @@ module.exports = class SimpleMessageChannels {
         }
         if (this.onmissing) {
           const extra = data.length - offset
-          if (this._length > extra) this.onmissing(this._length - extra)
+          if (this._length > extra) this.onmissing(this._length - extra, this.context)
         }
         return true
 
