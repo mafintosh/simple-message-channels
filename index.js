@@ -55,7 +55,7 @@ module.exports = class SimpleMessageChannels {
 
     if (!this._message) this._message = Buffer.allocUnsafe(this._length)
     data.copy(this._message, this._message.length - this._length, offset)
-    this._length -= data.length
+    this._length -= free
 
     return data.length
   }
