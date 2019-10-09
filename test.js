@@ -104,3 +104,24 @@ tape('empty message', function (t) {
 
   a.recv(a.send(0, 0, Buffer.alloc(0)))
 })
+
+tape('chunk message is correct', function (t) {
+  t.plan(3)
+
+  const a = new SMC({
+    onmessage (channel, type, message) {
+      t.same(channel, 0)
+      t.same(type, 1)
+      t.same(message, Buffer.from('aaaaaaaaaa'))
+    }
+  })
+
+  const b = new SMC()
+
+  const batch = b.sendBatch([
+    { channel: 0, type: 1, message: Buffer.from('aaaaaaaaaa') }
+  ])
+
+  a.recv(batch.slice(0, 4))
+  a.recv(batch.slice(4, 12))
+})
