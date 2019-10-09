@@ -1,7 +1,7 @@
 const varint = require('varint')
 
 module.exports = class SimpleMessageChannels {
-  constructor ({ maxSize = 8 * 1024 * 1024, context = null, onmessage = null, types = null } = {}) {
+  constructor ({ maxSize = 8 * 1024 * 1024, context = null, onmessage = null, onmissing = null, types = null } = {}) {
     this._message = null
     this._ptr = 0
     this._varint = 0
@@ -18,6 +18,7 @@ module.exports = class SimpleMessageChannels {
     this.error = null
     this.context = context
     this.onmessage = onmessage
+    this.onmissing = onmissing
   }
 
   destroy (err) {
@@ -90,6 +91,10 @@ module.exports = class SimpleMessageChannels {
         if (this._length < 0 || this._length > this._maxSize) {
           this.destroy(new Error('Incoming message is larger than max size'))
           return false
+        }
+        if (this.onmissing) {
+          const extra = data.length - offset
+          if (this._length > extra) this.onmissing(this._length - extra)
         }
         return true
 

@@ -106,13 +106,16 @@ tape('empty message', function (t) {
 })
 
 tape('chunk message is correct', function (t) {
-  t.plan(3)
+  t.plan(4)
 
   const a = new SMC({
     onmessage (channel, type, message) {
       t.same(channel, 0)
       t.same(type, 1)
       t.same(message, Buffer.from('aaaaaaaaaa'))
+    },
+    onmissing (bytes) {
+      t.same(bytes, 8)
     }
   })
 
