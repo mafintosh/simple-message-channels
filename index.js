@@ -3,7 +3,6 @@ const varint = require('varint')
 module.exports = class SimpleMessageChannels {
   constructor ({ maxSize = 8 * 1024 * 1024, context = null, onmessage = null, onmissing = null, types = null } = {}) {
     this._message = null
-    this._ptr = 0
     this._varint = 0
     this._factor = 1
     this._length = 0
